@@ -25,6 +25,8 @@ from kazen_event_schema.mcp_mesh import build_inter_agent_call_event  # noqa: E4
 
 def _load_builder_mesh_router() -> ModuleType:
     path = _KAZEN / "kazenai-agent-builder" / "integrations" / "mesh_router.py"
+    if not path.exists():
+        pytest.skip(f"builder mesh_router missing: {path}")
     spec = importlib.util.spec_from_file_location("builder_mesh_router", path)
     assert spec and spec.loader
     mod = importlib.util.module_from_spec(spec)

@@ -1,8 +1,9 @@
 """Loop 31 P3-1 proof — unified MCP catalog + cross-product mesh dispatch.
 
-An external agent calls one capability from EACH of the five services via the
-mesh, sharing one root_run_id, org-scoped, with budget-governed tools blocked
-when the org budget is exhausted. Fails before (no mcp_catalog / mcp_mesh).
+Catalog completeness tests are hermetic (this package only).
+
+Cross-product mesh tests load sibling agent MCP servers from the workspace
+polyrepo and are skipped when those trees are absent (isolated CI checkout).
 """
 
 from __future__ import annotations
@@ -19,34 +20,6 @@ _KAZEN = _SPINE.parent
 if str(_SPINE) not in sys.path:
     sys.path.insert(0, str(_SPINE))
 
-
-def _load_service_mcp(backend_subdir: str, module_name: str = "mcp_server") -> ModuleType:
-    """Load sdk/mcp_server.py from a specific agent without sdk package collisions."""
-    base = _KAZEN / backend_subdir
-    path = base / "sdk" / f"{module_name}.py"
-    spec = importlib.util.spec_from_file_location(f"kazen_mcp_{backend_subdir.replace('/', '_')}", path)
-    assert spec and spec.loader
-    mod = importlib.util.module_from_spec(spec)
-    # Ensure agent package roots are importable for relative imports inside the module.
-    agent_root = str(base)
-    if agent_root not in sys.path:
-        sys.path.append(agent_root)
-    spec.loader.exec_module(mod)
-    return mod
-
-
-brain_mcp = _load_service_mcp("kazenai-agent-brain/backend")
-lens_mcp = _load_service_mcp("kazenai-agent-lens/backend/agent_lens")
-finops_mcp = _load_service_mcp("kazenai-agent-finops/backend")
-growthops_mcp = _load_service_mcp("kazenai-agent-growthops/backend")
-builder_mcp = _load_service_mcp("kazenai-agent-builder")
-
-# Brain client lives beside its mcp_server
-_brain_root = str(_KAZEN / "kazenai-agent-brain/backend")
-if _brain_root not in sys.path:
-    sys.path.insert(0, _brain_root)
-from sdk.brain_client import KazenBrain  # noqa: E402
-
 from kazen_event_schema import (  # noqa: E402
     BudgetDenied,
     KAZEN_MCP_CATALOG,
@@ -58,14 +31,68 @@ from kazen_event_schema import (  # noqa: E402
 )
 from kazen_event_schema.mcp_catalog import REQUIRED_CAPABILITIES  # noqa: E402
 
-
 ROOT_RUN = "mcp-mesh-p31"
 ORG_A = "org-a-mcp"
 ORG_B = "org-b-mcp"
 
+_SIBLING_BACKENDS = (
+    "kazenai-agent-brain/backend",
+    "kazenai-agent-lens/backend/agent_lens",
+    "kazenai-agent-finops/backend",
+    "kazenai-agent-growthops/backend",
+    "kazenai-agent-builder",
+)
+
+
+def _siblings_available() -> bool:
+    return all((_KAZEN / rel / "sdk" / "mcp_server.py").exists() for rel in _SIBLING_BACKENDS)
+
+
+def _load_service_mcp(backend_subdir: str, module_name: str = "mcp_server") -> ModuleType:
+    """Load sdk/mcp_server.py from a specific agent without sdk package collisions."""
+    base = _KAZEN / backend_subdir
+    path = base / "sdk" / f"{module_name}.py"
+    if not path.exists():
+        pytest.skip(f"sibling MCP server missing: {path}")
+    spec = importlib.util.spec_from_file_location(
+        f"kazen_mcp_{backend_subdir.replace('/', '_')}", path
+    )
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    agent_root = str(base)
+    if agent_root not in sys.path:
+        sys.path.append(agent_root)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.fixture(scope="module")
+def sibling_mcp():
+    if not _siblings_available():
+        pytest.skip("sibling agent MCP servers not present (isolated checkout)")
+    brain_mcp = _load_service_mcp("kazenai-agent-brain/backend")
+    lens_mcp = _load_service_mcp("kazenai-agent-lens/backend/agent_lens")
+    finops_mcp = _load_service_mcp("kazenai-agent-finops/backend")
+    growthops_mcp = _load_service_mcp("kazenai-agent-growthops/backend")
+    builder_mcp = _load_service_mcp("kazenai-agent-builder")
+
+    brain_root = str(_KAZEN / "kazenai-agent-brain/backend")
+    if brain_root not in sys.path:
+        sys.path.insert(0, brain_root)
+    from sdk.brain_client import KazenBrain  # noqa: WPS433
+
+    return {
+        "brain_mcp": brain_mcp,
+        "lens_mcp": lens_mcp,
+        "finops_mcp": finops_mcp,
+        "growthops_mcp": growthops_mcp,
+        "builder_mcp": builder_mcp,
+        "KazenBrain": KazenBrain,
+    }
+
 
 # ---------------------------------------------------------------------------
-# Catalog completeness
+# Catalog completeness (hermetic)
 # ---------------------------------------------------------------------------
 
 
@@ -81,7 +108,12 @@ def test_required_capabilities_all_present() -> None:
         assert required.issubset(have), f"{svc}: missing {required - have}"
 
 
-def test_each_service_mcp_exports_match_catalog() -> None:
+def test_each_service_mcp_exports_match_catalog(sibling_mcp) -> None:
+    brain_mcp = sibling_mcp["brain_mcp"]
+    lens_mcp = sibling_mcp["lens_mcp"]
+    finops_mcp = sibling_mcp["finops_mcp"]
+    builder_mcp = sibling_mcp["builder_mcp"]
+    growthops_mcp = sibling_mcp["growthops_mcp"]
     assert brain_mcp.TOOL_NAMES >= REQUIRED_CAPABILITIES["brain"]
     assert lens_mcp.TOOL_NAMES >= REQUIRED_CAPABILITIES["lens"]
     assert finops_mcp.TOOL_NAMES >= REQUIRED_CAPABILITIES["finops"]
@@ -94,7 +126,14 @@ def test_each_service_mcp_exports_match_catalog() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_handlers():
+def _make_handlers(sibling_mcp):
+    brain_mcp = sibling_mcp["brain_mcp"]
+    lens_mcp = sibling_mcp["lens_mcp"]
+    finops_mcp = sibling_mcp["finops_mcp"]
+    growthops_mcp = sibling_mcp["growthops_mcp"]
+    builder_mcp = sibling_mcp["builder_mcp"]
+    KazenBrain = sibling_mcp["KazenBrain"]
+
     brain_store: dict = {}
 
     def brain_transport(path, body, headers):
@@ -156,11 +195,10 @@ def _make_handlers():
     }, lens_calls, finops_state, finops
 
 
-def test_external_agent_calls_all_five_services_one_root_run_id() -> None:
-    handlers, lens_calls, _, _ = _make_handlers()
+def test_external_agent_calls_all_five_services_one_root_run_id(sibling_mcp) -> None:
+    handlers, lens_calls, _, _ = _make_handlers(sibling_mcp)
     session = McpMeshSession(org_id=ORG_A, root_run_id=ROOT_RUN, handlers=handlers, budget_allowed=True)
 
-    # FinOps reserve first (budget-governed path)
     reserve = session.call(
         "finops",
         "budget_reserve",
@@ -198,7 +236,6 @@ def test_external_agent_calls_all_five_services_one_root_run_id() -> None:
     )
     assert send["requires_approval"] is True
 
-    # Every call emitted mcp.call on the spine with the SAME root_run_id
     assert len(session.events) == 7
     for ev in session.events:
         validate_kazen_event(ev, strict=True)
@@ -206,13 +243,12 @@ def test_external_agent_calls_all_five_services_one_root_run_id() -> None:
         assert ev["root_run_id"] == ROOT_RUN
         assert ev["event_type"] == "mcp.call"
 
-    # Lens trace was org-scoped
     assert any("timeline" in c["path"] for c in lens_calls)
-    assert lens_calls[0]["headers"].get("X-Kazen-Org-Id") == ORG_A or ORG_A  # org injected in args
+    assert lens_calls[0]["headers"].get("X-Kazen-Org-Id") == ORG_A or ORG_A
 
 
-def test_budget_governed_tool_blocked_when_org_budget_exhausted() -> None:
-    handlers, _, finops_state, finops = _make_handlers()
+def test_budget_governed_tool_blocked_when_org_budget_exhausted(sibling_mcp) -> None:
+    handlers, _, finops_state, finops = _make_handlers(sibling_mcp)
     finops_state["reserved"] = 0.99
     finops_state["limit"] = 1.0
 
@@ -226,16 +262,16 @@ def test_budget_governed_tool_blocked_when_org_budget_exhausted() -> None:
     assert denied["payload"]["reason"] == "budget_denied"
 
 
-def test_cross_tenant_org_mismatch_rejected() -> None:
-    handlers, _, _, _ = _make_handlers()
+def test_cross_tenant_org_mismatch_rejected(sibling_mcp) -> None:
+    handlers, _, _, _ = _make_handlers(sibling_mcp)
     session = McpMeshSession(org_id=ORG_A, root_run_id=ROOT_RUN, handlers=handlers, budget_allowed=True)
 
     with pytest.raises(OrgMismatch):
         session.call("brain", "recall", {"query": "x", "org_id": ORG_B})
 
 
-def test_finops_reserve_denied_propagates_from_service() -> None:
-    handlers, _, finops_state, _ = _make_handlers()
+def test_finops_reserve_denied_propagates_from_service(sibling_mcp) -> None:
+    handlers, _, finops_state, _ = _make_handlers(sibling_mcp)
     finops_state["reserved"] = 1.0
     finops_state["limit"] = 1.0
 
