@@ -5,6 +5,7 @@
 
 # Venvs present in this tree
 .venv/
+.venv-ci
 .venv-bootstrap/
 venv/
 
