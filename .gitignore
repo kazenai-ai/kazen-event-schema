@@ -1,0 +1,23 @@
+# Local envs (none currently; keep safe for future)
+.env
+.env.*
+!.env.example
+
+# Venvs present in this tree
+.venv/
+.venv-bootstrap/
+venv/
+
+# Python / packaging
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+.coverage
+htmlcov/
+coverage.xml
+.DS_Store

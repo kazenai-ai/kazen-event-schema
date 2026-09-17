@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "competitive_signal",
+  "description": "Emitted when a competitor ships a feature relevant to KazenAI's core capabilities.",
+  "type": "object",
+  "required": ["event_type", "competitor", "feature", "relevance", "source_url"],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "const": "competitive_signal"
+    },
+    "competitor": {
+      "type": "string",
+      "description": "Competitor name slug, e.g. 'laminar', 'langfuse', 'respan'."
+    },
+    "feature": {
+      "type": "string",
+      "description": "Short feature name or release title (max 200 chars)."
+    },
+    "relevance": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "0.0–1.0 relevance score to KazenAI's core features."
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL of the changelog entry, release, or blog post."
+    },
+    "raw_excerpt": {
+      "type": "string",
+      "description": "Raw text excerpt from the source (max 500 chars)."
+    }
+  },
+  "additionalProperties": true
+}
