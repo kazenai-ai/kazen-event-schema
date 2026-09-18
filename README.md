@@ -53,3 +53,7 @@ assert is_model_call("model.call")
 ## Service ports
 
 See [../PORTS.md](../PORTS.md).
+
+## License
+
+Apache License 2.0. See LICENSE and NOTICE.
