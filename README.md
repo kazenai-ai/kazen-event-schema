@@ -1,20 +1,18 @@
 # kazen-event-schema
 
-[![Local package](https://img.shields.io/badge/package-local%20v0.6.0-blue.svg)](../WORKSPACE.md)
+[![PyPI](https://img.shields.io/pypi/v/kazen-event-schema.svg)](https://pypi.org/project/kazen-event-schema/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![LLM calls guarded](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/kazenai-ai/kazenai-finops-sdk/main/badge/llm-guard.json)](https://github.com/kazenai-ai/kazenai-finops-sdk/blob/main/scripts/audit_llm_calls_all.py)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-Canonical `KazenEvent` schema shared across KazenAI services (orchestrator, FinOps, AgentLens, `kazenai-core`).
+Canonical `KazenEvent` schema shared across KazenAI services (orchestrator, FinOps, AgentLens, `kazenai`).
 
-**Quickstart:** [kazenai.com/onboarding](https://kazenai.com/onboarding)
+**Install:** [PyPI · kazen-event-schema](https://pypi.org/project/kazen-event-schema/) · **Products:** [kazenai.com](https://kazenai.com)
 
 ```bash
-pip install -e ./kazen-event-schema
+python -m pip install kazen-event-schema
 ```
 
-Publishing status: this workspace version is not yet published on PyPI. Use the
-local editable install above until the package release workflow is moved into a
-real repo and run.
+**Published on PyPI** as `kazen-event-schema` **0.6.1**. Editable `pip install -e ./kazen-event-schema` remains available for workspace contributors.
 
 ## Canonical event types
 
@@ -52,7 +50,7 @@ assert is_model_call("model.call")
 
 ## Service ports
 
-See [../PORTS.md](../PORTS.md).
+See [../PORTS.md](../PORTS.md) when working from a full KazenAI workspace checkout.
 
 ## License
 

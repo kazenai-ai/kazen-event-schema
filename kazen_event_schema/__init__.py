@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 __all__ = [
     "KazenEvent",
     "EventType",
