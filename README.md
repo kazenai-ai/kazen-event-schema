@@ -12,7 +12,7 @@ Canonical `KazenEvent` schema shared across KazenAI services (orchestrator, FinO
 python -m pip install kazen-event-schema
 ```
 
-**Published on PyPI** as `kazen-event-schema` **0.6.1**. Editable `pip install -e ./kazen-event-schema` remains available for workspace contributors.
+**Published on PyPI** as `kazen-event-schema` **0.6.2**. Editable `pip install -e ./kazen-event-schema` remains available for workspace contributors.
 
 ## Canonical event types
 

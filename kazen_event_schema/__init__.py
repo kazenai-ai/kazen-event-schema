@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 __all__ = [
     "KazenEvent",
     "EventType",
@@ -393,10 +393,30 @@ class FinOpsOptimizationPayload(BaseModel):
     compression_ratio: Optional[float] = None
 
 
-FinOpsBudgetLevel = Literal["run", "feature", "actor", "team", "workspace", "org"]
+FinOpsBudgetLevel = Literal[
+    "run",
+    "feature",
+    "actor",
+    "team",
+    "workspace",
+    "org",
+    "business_subject",
+    "workflow",
+    "business_subject_feature",
+]
 
 _FINOPS_BUDGET_LEVELS = frozenset(
-    {"run", "feature", "actor", "team", "workspace", "org"}
+    {
+        "run",
+        "feature",
+        "actor",
+        "team",
+        "workspace",
+        "org",
+        "business_subject",
+        "workflow",
+        "business_subject_feature",
+    }
 )
 
 
@@ -407,6 +427,7 @@ class FinOpsBudgetPayload(BaseModel):
     envelope tripped: ``level_blocked``, ``dimension``, ``dimension_id``,
     ``window_blocked``, plus ``feature`` and ``actor_id`` for lineage joins.
     All hierarchy fields are optional — legacy events omit them.
+    FINAL_1_b: optional business attribution + decision identity fields.
     """
 
     model_config = ConfigDict(extra="allow", protected_namespaces=())
@@ -431,6 +452,14 @@ class FinOpsBudgetPayload(BaseModel):
     dimension: str = ""
     dimension_id: str = ""
     window_blocked: str = ""
+    # FINAL_1_b P1-1 — optional attribution / execution identity (all optional for legacy).
+    business_subject_ref: Optional[str] = None
+    feature_id: Optional[str] = None
+    workflow_id: Optional[str] = None
+    operation_id: Optional[str] = None
+    attempt_id: Optional[str] = None
+    attribution_state: Optional[str] = None
+    decision_id: Optional[str] = None
 
     @field_validator("level_blocked", "dimension", mode="before")
     @classmethod

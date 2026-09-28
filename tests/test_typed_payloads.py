@@ -124,6 +124,49 @@ def test_finops_budget_payload_model_class() -> None:
     assert p.dimension_id.startswith("apikey:")
 
 
+def test_finops_budget_payload_final1b_attribution_optional_fields() -> None:
+    """FINAL_1_b — optional business attribution fields on FinOpsBudgetPayload."""
+    p = FinOpsBudgetPayload(
+        allowed=False,
+        reason="insufficient_capacity",
+        level_blocked="business_subject",
+        dimension="business_subject_feature",
+        dimension_id="cust_acme:support.v1",
+        window_blocked="daily",
+        business_subject_ref="cust_acme_42",
+        feature_id="support.v1",
+        workflow_id="customer_reply.v1",
+        operation_id="op:chat:1",
+        attempt_id="op:chat:1:attempt:1",
+        attribution_state="attributed",
+        decision_id="dec_fixture_1",
+        reserved_usd_micros=0,
+    )
+    assert p.business_subject_ref == "cust_acme_42"
+    assert p.feature_id == "support.v1"
+    assert p.workflow_id == "customer_reply.v1"
+    assert p.operation_id == "op:chat:1"
+    assert p.attempt_id == "op:chat:1:attempt:1"
+    assert p.attribution_state == "attributed"
+    assert p.decision_id == "dec_fixture_1"
+    assert p.level_blocked == "business_subject"
+    assert p.dimension == "business_subject_feature"
+
+    validate_payload(
+        "finops.budget.denied",
+        {
+            "allowed": False,
+            "business_subject_ref": "cust_x",
+            "feature_id": "feat.y",
+            "workflow_id": "wf.z",
+            "attribution_state": "attributed",
+            "decision_id": "dec_2",
+            "dimension": "workflow",
+            "level_blocked": "workflow",
+        },
+    )
+
+
 def test_model_call_payload_valid() -> None:
     validate_payload("model.call", {"model": "claude-opus-4-7", "prompt_hash": "abc123"})
 
