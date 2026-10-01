@@ -6,7 +6,9 @@
 
 **The shared event contract for KazenAI.** One schema so Agent FinOps, Agent Lens, and the SDKs speak the same language about cost, runs, and control decisions.
 
-**Install:** [PyPI · kazen-event-schema](https://pypi.org/project/kazen-event-schema/) · **Products:** [kazenai.com](https://kazenai.com)
+**Install:** [PyPI · kazen-event-schema](https://pypi.org/project/kazen-event-schema/) · **Docs:** [Event reference](https://docs.kazenai.com/reference/events/) · **Products:** [kazenai.com](https://kazenai.com)
+
+**Source:** [github.com/kazenai-ai/kazen-event-schema](https://github.com/kazenai-ai/kazen-event-schema)
 
 ---
 

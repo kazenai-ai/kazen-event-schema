@@ -15,7 +15,12 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-__version__ = "0.6.2"
+try:
+    from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+    __version__ = _pkg_version("kazen-event-schema")
+except PackageNotFoundError:  # pragma: no cover - source-tree only
+    __version__ = "0.6.3"
 __all__ = [
     "KazenEvent",
     "EventType",
