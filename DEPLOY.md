@@ -25,7 +25,7 @@ COPY kazen-event-schema /tmp/kazen-event-schema
 RUN pip install /tmp/kazen-event-schema
 ```
 
-Or pin from PyPI: `pip install kazen-event-schema==0.6.0`
+Or pin from PyPI: `pip install kazen-event-schema==0.6.3`
 
 ## Required environment
 
