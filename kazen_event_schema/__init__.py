@@ -20,7 +20,7 @@ try:
 
     __version__ = _pkg_version("kazen-event-schema")
 except PackageNotFoundError:  # pragma: no cover - source-tree only
-    __version__ = "0.6.4"
+    __version__ = "0.6.5"
 __all__ = [
     "KazenEvent",
     "EventType",
@@ -48,7 +48,7 @@ __all__ = [
     "validate_payload",
     "MemoryWritePayload",
     "validate_memory_write_payload",
-    # Orchestration (Loop 24 — Kazen Route / Conductor-compatible)
+    # Orchestration (Kazen Route / Conductor-compatible)
     "OrchestrationWorkflow",
     "OrchestrationRole",
     "OrchestrationWorkflowPlannedPayload",
@@ -60,7 +60,7 @@ __all__ = [
     "validate_orchestration_payload",
     "orchestration_workflow_round_trip",
     "TriRole",
-    # Company operating loop (Loop 23 P0-1)
+    # Company operating loop
     "CompanyLoopRecord",
     "CompanyBlockerKind",
     "CompanyGoalCreatedPayload",
@@ -72,7 +72,7 @@ __all__ = [
     "record_to_goal_created_payload",
     "validate_company_loop_payload",
     "company_loop_record_round_trip",
-    # Governance / policy plane (Loop 31 P1-2)
+    # Governance / policy plane
     "OrgPolicy",
     "PolicyAction",
     "PolicyActionKind",
@@ -83,7 +83,7 @@ __all__ = [
     "build_policy_decision_event",
     "validate_governance_payload",
     "GOVERNANCE_EVENT_TYPES",
-    # Lens shared eval substrate (Loop 31 P2-1)
+    # Lens shared eval substrate
     "LensEvalPayload",
     "LensRootCausePayload",
     "GrowthOpsMultichannelPayload",
@@ -91,7 +91,7 @@ __all__ = [
     "GrowthOpsReplyLearnedPayload",
     "MemoryForgottenPayload",
     "MemoryRecallBenchmarkPayload",
-    # MCP mesh catalog (Loop 31 P3-1)
+    # MCP mesh catalog
     "McpToolSpec",
     "KAZEN_MCP_CATALOG",
     "REQUIRED_CAPABILITIES",
@@ -208,16 +208,16 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "orchestration.workflow.planned",
     "orchestration.workflow.revised",
     "orchestration.reward.recorded",
-    # Company operating loop (Loop 23 P0-1)
+    # Company operating loop
     "company.goal.created",
     "company.run.started",
     "company.approval.pending",
     "company.outcome.recorded",
     "company.memory.committed",
-    # Governance / policy plane (Loop 31 P1-2)
+    # Governance / policy plane
     "policy.decision",
-    # Lens shared eval substrate (Loop 31 P2-1) — one eval score for any agent's
-    # output, joined to P1-1 lineage by root_run_id.
+    # Lens shared eval substrate — one eval score for any agent's
+    # output, joined to run lineage by root_run_id.
     "lens.eval.scored",
     "lens.root_cause.diagnosed",
     "playbook.suggested",
@@ -294,7 +294,7 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "tool.call",
     "tool.pre_call",
     "tool.repair.applied",
-    # Framework lifecycle (FINAL_1_b_final R19)
+    # Framework lifecycle
     "workflow.start",
     "workflow.end",
     "workflow.step",
@@ -386,7 +386,7 @@ class FinOpsPayload(BaseModel):
 
 
 class FinOpsOptimizationPayload(BaseModel):
-    """Typed payload for ``finops.optimization.applied`` (Loop 31 P4-F1).
+    """Typed payload for ``finops.optimization.applied``.
 
     Records measured savings from auto-routing, semantic cache, and prompt
     compression while preserving Lens eval score.
@@ -443,7 +443,7 @@ class FinOpsBudgetPayload(BaseModel):
     envelope tripped: ``level_blocked``, ``dimension``, ``dimension_id``,
     ``window_blocked``, plus ``feature`` and ``actor_id`` for lineage joins.
     All hierarchy fields are optional — legacy events omit them.
-    FINAL_1_b: optional business attribution + decision identity fields.
+    Optional business attribution + decision identity fields.
     """
 
     model_config = ConfigDict(extra="allow", protected_namespaces=())
@@ -452,7 +452,7 @@ class FinOpsBudgetPayload(BaseModel):
     reserved_cost_usd: Optional[float] = None
     projected_cost_usd: Optional[float] = None
     actual_cost_usd: Optional[float] = None
-    # FINAL_1 P2-1 — optional micros fields; float USD remains legacy until P2-6 migration.
+    # Optional micros fields; float USD remains for backward compatibility.
     # Canonical meanings live in kazenai-contracts reservation.lifecycle.v1 (do not fork).
     reserved_usd_micros: Optional[int] = None
     projected_usd_micros: Optional[int] = None
@@ -468,7 +468,7 @@ class FinOpsBudgetPayload(BaseModel):
     dimension: str = ""
     dimension_id: str = ""
     window_blocked: str = ""
-    # FINAL_1_b P1-1 — optional attribution / execution identity (all optional for legacy).
+    # Optional attribution / execution identity (all optional for legacy).
     business_subject_ref: Optional[str] = None
     feature_id: Optional[str] = None
     workflow_id: Optional[str] = None
@@ -494,7 +494,7 @@ class FinOpsBudgetPayload(BaseModel):
 
 
 class FinOpsBudgetForecastPayload(BaseModel):
-    """Typed payload for ``finops.budget.forecast`` (Loop 31 P4-F2)."""
+    """Typed payload for ``finops.budget.forecast``."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -520,7 +520,7 @@ class UsagePayload(BaseModel):
 
 
 class LensEvalPayload(BaseModel):
-    """Typed payload for the canonical `lens.eval.scored` audit event (Loop 31 P2-1).
+    """Typed payload for the canonical `lens.eval.scored` audit event.
 
     The single record shape Lens emits when it grades ANY agent's output (Brain
     recall, Builder PR, GrowthOps reply, FinOps forecast). Carries the normalized
@@ -537,7 +537,7 @@ class LensEvalPayload(BaseModel):
 
 
 class GrowthOpsMultichannelPayload(BaseModel):
-    """Typed payload for ``growthops.multichannel.planned`` (Loop 31 P4-G1).
+    """Typed payload for ``growthops.multichannel.planned``.
 
     Records a governed email + LinkedIn + voice orchestration plan joined to
     call qualification and a shared sequence_id on root_run_id lineage.
@@ -557,7 +557,7 @@ class GrowthOpsMultichannelPayload(BaseModel):
 
 
 class GrowthOpsInboundIntentPayload(BaseModel):
-    """Typed payload for ``growthops.inbound.scored`` (Loop 31 P4-G2).
+    """Typed payload for ``growthops.inbound.scored``.
 
     Signal/intent-based inbound scoring — prioritizes warm inbound over cold
     outbound and routes to the right GrowthOps playbook.
@@ -577,9 +577,9 @@ class GrowthOpsInboundIntentPayload(BaseModel):
 
 
 class GrowthOpsReplyLearnedPayload(BaseModel):
-    """Typed payload for ``growthops.reply.learned`` (Loop 31 P4-G3).
+    """Typed payload for ``growthops.reply.learned``.
 
-    Reply-outcome learning that feeds the next sequence touch, with Lens P2-1
+    Reply-outcome learning that feeds the next sequence touch, with the Lens
     proof of lift over the baseline follow-up.
     """
 
@@ -598,7 +598,7 @@ class GrowthOpsReplyLearnedPayload(BaseModel):
 
 
 class MemoryForgottenPayload(BaseModel):
-    """Typed payload for ``memory.forgotten`` (Loop 31 P4-B1).
+    """Typed payload for ``memory.forgotten``.
 
     Machine-unlearning / GDPR erasure — provenance for a deliberately forgotten fact.
     """
@@ -614,9 +614,9 @@ class MemoryForgottenPayload(BaseModel):
 
 
 class MemoryRecallBenchmarkPayload(BaseModel):
-    """Typed payload for ``memory.recall_benchmark`` (Loop 31 P4-B4).
+    """Typed payload for ``memory.recall_benchmark``.
 
-    Sleep-time consolidation recall lift measurement for the P2-3 drift monitor.
+    Sleep-time consolidation recall lift measurement for the drift monitor.
     """
 
     model_config = ConfigDict(extra="allow")
@@ -628,7 +628,7 @@ class MemoryRecallBenchmarkPayload(BaseModel):
 
 
 class LensRootCausePayload(BaseModel):
-    """Typed payload for ``lens.root_cause.diagnosed`` (Loop 31 P4-L3).
+    """Typed payload for ``lens.root_cause.diagnosed``.
 
     Structured root-cause diagnosis for a failed trajectory — primary hypothesis,
   contributing factors, symptoms, and recommended fixes, joined to lineage via
@@ -649,7 +649,7 @@ class LensRootCausePayload(BaseModel):
 
 
 class FrameworkWorkflowPayload(BaseModel):
-    """Typed payload for framework ``workflow.*`` events (U12)."""
+    """Typed payload for framework ``workflow.*`` events."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -751,7 +751,7 @@ class KazenEvent(BaseModel):
     step_id: Optional[str] = None
     parent_step_id: Optional[str] = None
     parent_run_id: Optional[str] = None
-    # Unified cross-product lineage (Loop 31 P0-2). root_run_id is the top of the
+    # Unified cross-product lineage. root_run_id is the top of the
     # run tree that links a Builder run + its FinOps cost + Lens trace + Brain
     # writes by a single id; trace_id is the OTel-compatible distributed trace id.
     root_run_id: Optional[str] = None
@@ -827,7 +827,7 @@ class KazenEvent(BaseModel):
             self.tokens_used = self.tokens
         if self.tokens is None and self.tokens_used is not None:
             self.tokens = self.tokens_used
-        # Self-rooting (Loop 31 P0-2): a run with no explicit root is its own root,
+        # Self-rooting: a run with no explicit root is its own root,
         # so every event is always join-able by root_run_id. Child runs must
         # propagate the parent's root_run_id explicitly (a producer concern) — we
         # deliberately do NOT infer it from parent_run_id, which would need a lookup

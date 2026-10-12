@@ -1,4 +1,4 @@
-"""Loop 31 P1-2 — one org policy plane governs all five agents + one audit log.
+"""One org policy plane governs all five agents + one audit log.
 
 Proves the cross-product claim at the shared-evaluator level: a SINGLE OrgPolicy
 object decides the four governed action classes (one per enforcement surface:
@@ -148,7 +148,7 @@ def test_decision_emits_one_canonical_audit_event() -> None:
     assert validated.org_id == "org-a"
     assert validated.surface == "kazenai-agent-builder"
     assert validated.gate_decision == "deny"
-    assert validated.root_run_id == "root-run-100"  # audit joins to lineage (P1-1)
+    assert validated.root_run_id == "root-run-100"  # audit joins to lineage
     assert validated.payload["clause"] == "require_security_review_for_merge"
     assert validated.payload["decision"] == "deny"
     assert validated.payload["policy_version"] == 7

@@ -1,4 +1,4 @@
-"""Tests for company operating loop event types (Loop 23 P0-1)."""
+"""Tests for company operating loop event types."""
 
 from __future__ import annotations
 

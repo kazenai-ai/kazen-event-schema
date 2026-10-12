@@ -2,7 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/kazen-event-schema.svg)](https://pypi.org/project/kazen-event-schema/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/kazenai-ai/kazen-event-schema/blob/main/LICENSE)
 
 **The shared event contract for KazenAI.** One schema so Agent FinOps, Agent Lens, and the SDKs speak the same language about cost, runs, and control decisions.
 
@@ -96,18 +96,23 @@ event = KazenEvent(
 | Agent FinOps | Accounting + ingest |
 | Agent Lens | Investigation + timelines |
 
-## Consumer synchronization
+## Consuming events safely
 
-FINAL_1_b_final uses manual schema synchronization. Consumers must validate the
-canonical model before projecting fields, reject unknown top-level fields, and
-test `tokens`/`tokens_used`, timestamp aliases, duplicate/conflict behavior, and
-producer-to-persistence round trips. Exporting JSON Schema without checking for
-a repository diff is not sufficient drift protection.
+If you ingest `KazenEvent`s in your own service:
+
+- Validate each event with `KazenEvent` before reading fields; unknown top-level
+  fields are rejected.
+- Treat `tokens` and `tokens_used` (and the timestamp aliases) as the same
+  value — the model normalizes them and rejects conflicting values.
+- Use `event_id` for idempotent ingest: a repeated event with the same content
+  is a duplicate, a repeated id with different content is a conflict.
+- Pin a compatible range (`kazen-event-schema>=0.6,<0.7`) and run your
+  ingest-to-storage tests when you upgrade.
 
 ---
 
 ## License
 
-Apache License 2.0. See LICENSE and NOTICE.
+Apache License 2.0. See [LICENSE](https://github.com/kazenai-ai/kazen-event-schema/blob/main/LICENSE) and [NOTICE](https://github.com/kazenai-ai/kazen-event-schema/blob/main/NOTICE).
 
 Products: [kazenai.com](https://kazenai.com) · **founder@kazenai.com**

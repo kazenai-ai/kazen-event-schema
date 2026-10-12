@@ -1,4 +1,4 @@
-"""Loop 31 P3-1 proof — unified MCP catalog + cross-product mesh dispatch.
+"""Unified MCP catalog + cross-product mesh dispatch.
 
 Catalog completeness tests are hermetic (this package only).
 

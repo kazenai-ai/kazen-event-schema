@@ -1,7 +1,7 @@
-"""Loop 31 P0-2 — unified cross-product lineage fields on the canonical KazenEvent.
+"""Unified cross-product lineage fields on the canonical KazenEvent.
 
 These guard that root_run_id / trace_id are first-class wire fields (the canonical
-model is extra="forbid", so before P0-2 producers could not pass them at all) and
+model is extra="forbid", so previously producers could not pass them at all) and
 that self-rooting makes every event join-able by root_run_id.
 """
 

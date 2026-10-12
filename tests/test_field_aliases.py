@@ -1,4 +1,4 @@
-"""FINAL_1_b_final P2 — tokens/timestamp alias normalization and conflicts."""
+"""Tokens/timestamp alias normalization and conflicts."""
 
 from __future__ import annotations
 

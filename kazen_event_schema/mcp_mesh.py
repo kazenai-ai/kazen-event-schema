@@ -1,4 +1,4 @@
-"""Loop 31 P3-1 — MCP mesh dispatch: org-scoped, budget-governed, lineage-traced.
+"""MCP mesh dispatch: org-scoped, budget-governed, lineage-traced.
 
 External agents call capabilities through this layer so every cross-agent MCP
 invocation is traced (mcp.call KazenEvent), budget-checked, and tenant-isolated.
@@ -48,7 +48,7 @@ def build_mcp_call_event(
     reason: str = "",
     run_id: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Canonical mcp.call KazenEvent for lineage (P1-1 join key = root_run_id)."""
+    """Canonical mcp.call KazenEvent for lineage (join key = root_run_id)."""
     return {
         "event_id": str(uuid.uuid4()),
         "org_id": org_id,
@@ -199,7 +199,7 @@ class InterAgentMesh:
     """Route cross-agent calls through the MCP mesh (traced + budgeted + org-scoped).
 
     Every hop reserves against FinOps first, then dispatches to the callee service.
-    Emits inter-agent ``mcp.call`` events on the shared ``root_run_id`` (P1-1 lineage).
+    Emits inter-agent ``mcp.call`` events on the shared ``root_run_id`` (lineage).
     """
 
     def __init__(

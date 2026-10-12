@@ -1,4 +1,4 @@
-"""Spine validation for Brain P4-B memory audit events."""
+"""Spine validation for memory audit events."""
 
 from kazen_event_schema import (
     MemoryForgottenPayload,

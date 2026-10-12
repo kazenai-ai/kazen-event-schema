@@ -1,6 +1,6 @@
 """Company operating loop events — durable lineage from goal to memory write.
 
-Loop 23 P0-1: shared contract linking goal → owner agent → run → blocker →
+Shared contract linking goal → owner agent → run → blocker →
 approval → outcome → memory node without a new microservice.
 
 Event lifecycle

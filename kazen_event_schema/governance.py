@@ -1,4 +1,4 @@
-"""Loop 31 P1-2 — the unified org governance/policy plane (single source of truth).
+"""The unified org governance/policy plane (single source of truth).
 
 One `OrgPolicy` object expresses the clauses a CISO/CFO cares about:
 

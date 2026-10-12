@@ -1,4 +1,4 @@
-"""FINAL_1_b_final P0 — canonical tokens=17 normalization (already correct here)."""
+"""Canonical tokens=17 normalization (already correct here)."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Loop 31 P3-1 — unified MCP catalog across all five KazenAI agents.
+"""Unified MCP catalog across all five KazenAI agents.
 
 The platform becomes an OS: every capability is callable via MCP, org-scoped,
 and budget-governed where spend is involved. This module is the single catalog
@@ -352,7 +352,7 @@ def is_budget_governed(service: KazenService, name: str) -> bool:
 
 @dataclass
 class McpMeshCallRecord:
-    """Audit record for one mesh dispatch (joins P1-1 lineage via root_run_id)."""
+    """Audit record for one mesh dispatch (joins run lineage via root_run_id)."""
 
     org_id: str
     root_run_id: str

@@ -124,8 +124,8 @@ def test_finops_budget_payload_model_class() -> None:
     assert p.dimension_id.startswith("apikey:")
 
 
-def test_finops_budget_payload_final1b_attribution_optional_fields() -> None:
-    """FINAL_1_b — optional business attribution fields on FinOpsBudgetPayload."""
+def test_finops_budget_payload_attribution_optional_fields() -> None:
+    """Optional business attribution fields on FinOpsBudgetPayload."""
     p = FinOpsBudgetPayload(
         allowed=False,
         reason="insufficient_capacity",

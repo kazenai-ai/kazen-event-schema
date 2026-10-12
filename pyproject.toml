@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kazen-event-schema"
-version = "0.6.4"
-description = "Canonical KazenEvent schema for KazenAI services"
+version = "0.6.5"
+description = "The shared event contract for KazenAI: one KazenEvent model for SDKs, Agent FinOps and Agent Lens"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }

@@ -11,7 +11,7 @@ KazenAI field          | Conductor term              | Notes
 ``roles``              | (implicit in Trinity)       | thinker | worker | verifier tri-role
 ``workflow_id``        | workflow instance id        | Durable id for Lens replay
 ``parent_workflow_id`` | revised workflow parent     | Recursive revision (§3.2)
-``lineage_id``         | (KazenAI Loop 23 extension) | Company-loop lineage cross-ref
+``lineage_id``         | (KazenAI extension)         | Company-loop lineage cross-ref
 
 Event lifecycle
 ---------------

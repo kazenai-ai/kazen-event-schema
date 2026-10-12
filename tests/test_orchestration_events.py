@@ -1,4 +1,4 @@
-"""Tests for Conductor-compatible orchestration event types (Loop 24 P0-1)."""
+"""Tests for Conductor-compatible orchestration event types."""
 
 from __future__ import annotations
 

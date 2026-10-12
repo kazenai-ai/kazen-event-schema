@@ -1,4 +1,4 @@
-"""Loop 31 P3-2 proof — inter-agent mesh: Builder→Brain traced + budgeted."""
+"""Inter-agent mesh: Builder→Brain traced + budgeted."""
 
 from __future__ import annotations
 

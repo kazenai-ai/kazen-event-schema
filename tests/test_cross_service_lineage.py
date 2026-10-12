@@ -1,4 +1,4 @@
-"""Loop 31 P0-2 — cross-service lineage proof (>=2 components, one shared root_run_id).
+"""Cross-service lineage proof (>=2 components, one shared root_run_id).
 
 A single event dict carrying a shared root_run_id must validate through BOTH the
 canonical kazen_event_schema and Lens's ingest schema, with the lineage fields
