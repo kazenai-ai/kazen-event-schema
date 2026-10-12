@@ -65,9 +65,9 @@ event = KazenEvent(
 | Area | Examples |
 |------|----------|
 | Model invocation | `model.call` (legacy `llm.call` normalizes at ingest) |
-| Human gates | `gate.decision`, `human_gate`, `human.gate` |
-| FinOps / control | `finops.trajectory`, `finops.circuit_breaker.opened`, `finops.pause`, `finops.resumed` |
-| Run lifecycle | `run.started`, `run.completed`, `run.failed` |
+| Human gates | `gate.decision`, `human_gate` |
+| FinOps / control | `finops.budget.reserve`, `finops.budget.denied`, `finops.trajectory`, `finops.loop.anomaly`, `finops.circuit_breaker.opened`, `finops.pause`, `finops.resumed` |
+| Run lifecycle | `run.started`, `run.finished`, `run.failed` |
 
 ---
 
@@ -83,7 +83,7 @@ event = KazenEvent(
 | `workspace_id` / `project_id` | yes | Workspace scope |
 | `run_id` | recommended | Correlates steps in a run |
 | `step_id` / `parent_step_id` | recommended / optional | Step tree for multi-agent runs |
-| `tokens` / `cost_usd` | optional | Usage and spend |
+| `tokens` / `tokens_used` / `cost_usd` | optional | Usage and spend; token aliases normalize to the same count and conflicting values are rejected |
 | `payload` | optional | Model id, tool names, refs |
 
 ---
@@ -95,6 +95,14 @@ event = KazenEvent(
 | [`kazenai`](https://pypi.org/project/kazenai/) / [`kazenai-finops`](https://pypi.org/project/kazenai-finops/) | SDK emit path |
 | Agent FinOps | Accounting + ingest |
 | Agent Lens | Investigation + timelines |
+
+## Consumer synchronization
+
+FINAL_1_b_final uses manual schema synchronization. Consumers must validate the
+canonical model before projecting fields, reject unknown top-level fields, and
+test `tokens`/`tokens_used`, timestamp aliases, duplicate/conflict behavior, and
+producer-to-persistence round trips. Exporting JSON Schema without checking for
+a repository diff is not sufficient drift protection.
 
 ---
 

@@ -20,12 +20,15 @@ try:
 
     __version__ = _pkg_version("kazen-event-schema")
 except PackageNotFoundError:  # pragma: no cover - source-tree only
-    __version__ = "0.6.3"
+    __version__ = "0.6.4"
 __all__ = [
     "KazenEvent",
     "EventType",
     "KNOWN_EVENT_TYPES",
     "validate_kazen_event",
+    "canonicalize_event_dict",
+    "now_ms",
+    "new_id",
     "is_known_event_type",
     "normalize_event_type",
     "is_model_call",
@@ -185,7 +188,9 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "finops.budget.reserve",
     "finops.budget.forecast",
     "finops.circuit_breaker.opened",
+    "finops.loop.anomaly",
     "finops.stream_cutoff",
+    "finops.trajectory",
     "finops.pause",
     "finops.resumed",
     "finops.optimization.applied",
@@ -289,6 +294,12 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "tool.call",
     "tool.pre_call",
     "tool.repair.applied",
+    # Framework lifecycle (FINAL_1_b_final R19)
+    "workflow.start",
+    "workflow.end",
+    "workflow.step",
+    "workflow.suspend",
+    "workflow.error",
     "support.case_resolved",
     "support.escalated",
     "user.gate_approved",
@@ -637,6 +648,24 @@ class LensRootCausePayload(BaseModel):
     trace_digest: str = ""
 
 
+class FrameworkWorkflowPayload(BaseModel):
+    """Typed payload for framework ``workflow.*`` events (U12)."""
+
+    model_config = ConfigDict(extra="allow")
+
+    framework: str = ""
+    capability: str = "observe"
+    operation_id: str = ""
+    accounting_owner: str = "sdk"
+    wire_version: str = ""
+    mode: Optional[str] = None
+    phase: Optional[str] = None
+    status: Optional[str] = None
+    terminal: Optional[str] = None
+    error_type: Optional[str] = None
+    signal: Optional[str] = None
+
+
 # Maps event_type → payload validator class.
 # Only event types with structured payloads are registered; others are allowed
 # to carry arbitrary dicts (no validator registered = no validation performed).
@@ -658,6 +687,7 @@ _PAYLOAD_VALIDATORS: Dict[str, type[BaseModel]] = {
     "finops.pause": FinOpsPayload,
     "anomaly.detected": FinOpsPayload,
     "finops.trajectory": FinOpsPayload,
+    "finops.loop.anomaly": FinOpsPayload,
     "finops.optimization.applied": FinOpsOptimizationPayload,
     "usage.recorded": UsagePayload,
     "tool.repair.applied": ToolRepairPayload,
@@ -681,6 +711,11 @@ _PAYLOAD_VALIDATORS: Dict[str, type[BaseModel]] = {
     "growthops.reply.learned": GrowthOpsReplyLearnedPayload,
     "memory.forgotten": MemoryForgottenPayload,
     "memory.recall_benchmark": MemoryRecallBenchmarkPayload,
+    "workflow.start": FrameworkWorkflowPayload,
+    "workflow.end": FrameworkWorkflowPayload,
+    "workflow.step": FrameworkWorkflowPayload,
+    "workflow.suspend": FrameworkWorkflowPayload,
+    "workflow.error": FrameworkWorkflowPayload,
 }
 
 
@@ -746,6 +781,44 @@ class KazenEvent(BaseModel):
     verification_result: Dict[str, Any] = Field(default_factory=dict)
     payload: Dict[str, Any] = Field(default_factory=dict)
 
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_aliases(cls, data: Any) -> Any:
+        """Deterministic alias normalization before defaults apply.
+
+        - ``timestamp_ms`` alone populates ``ts_ms``
+        - ``ts_ms`` alone is kept; ``timestamp_ms`` is filled after validate
+        - conflicting non-null timestamp aliases are rejected
+        - conflicting non-null ``tokens`` / ``tokens_used`` are rejected
+        """
+        if not isinstance(data, dict):
+            return data
+        out = dict(data)
+        ts = out.get("ts_ms", None)
+        ts_alias = out.get("timestamp_ms", None)
+        if ts is None and ts_alias is not None:
+            out["ts_ms"] = ts_alias
+        elif ts is not None and ts_alias is not None:
+            try:
+                if int(ts) != int(ts_alias):
+                    raise ValueError("timestamp_conflict: ts_ms and timestamp_ms disagree")
+            except (TypeError, ValueError) as exc:
+                if "timestamp_conflict" in str(exc):
+                    raise
+                raise ValueError("timestamp_conflict: invalid timestamp alias types") from exc
+
+        tokens = out.get("tokens", None)
+        tokens_used = out.get("tokens_used", None)
+        if tokens is not None and tokens_used is not None:
+            try:
+                if int(tokens) != int(tokens_used):
+                    raise ValueError("tokens_conflict: tokens and tokens_used disagree")
+            except (TypeError, ValueError) as exc:
+                if "tokens_conflict" in str(exc):
+                    raise
+                raise ValueError("tokens_conflict: invalid token alias types") from exc
+        return out
+
     @model_validator(mode="after")
     def _sync_compat_fields(self) -> "KazenEvent":
         if self.timestamp_ms is None:
@@ -774,6 +847,41 @@ class KazenEvent(BaseModel):
                 f"(e.g. 'model.call', 'run.started')"
             )
         return v
+
+    @field_validator("cost_usd", "projected_total_cost_usd", "avoided_cost_usd", mode="after")
+    @classmethod
+    def _finite_money_fields(cls, v: Optional[float]) -> Optional[float]:
+        if v is None:
+            return v
+        if isinstance(v, bool) or not isinstance(v, (int, float)):
+            raise ValueError("invalid_money: cost fields must be finite numbers")
+        if v != v or v in (float("inf"), float("-inf")):  # NaN / Inf
+            raise ValueError("invalid_money: cost fields must be finite numbers")
+        return float(v)
+
+    @field_validator("schema_version")
+    @classmethod
+    def _supported_schema_version(cls, v: str) -> str:
+        if v not in {"1.0", "1.1", "1.2"}:
+            raise ValueError("unknown_schema_version: only 1.0, 1.1, or 1.2 is supported")
+        return v
+
+
+def now_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def new_id() -> str:
+    return uuid.uuid4().hex
+
+
+def canonicalize_event_dict(raw: Dict[str, Any]) -> Dict[str, Any]:
+    """Validate through the canonical model and return a lossless dump.
+
+    Network ingress callers must still bind authenticated tenant context and
+    enforce endpoint-required identity fields; this helper does not authorize.
+    """
+    return KazenEvent.model_validate(raw).model_dump(mode="python")
 
 
 def validate_kazen_event(
