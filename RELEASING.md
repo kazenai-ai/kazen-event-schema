@@ -15,18 +15,23 @@ without a deprecation window.
 
 ## Steps
 
-1. Set the same version in `pyproject.toml` and `kazen_event_schema/__init__.py`.
+1. Set the same version in `pyproject.toml` and `kazen_event_schema/__init__.py`,
+   and add a section at the top of `CHANGELOG.md` headed `## X.Y.Z - YYYY-MM-DD` (the release date).
 2. Register every new event type in `KNOWN_EVENT_TYPES`.
 3. Run the tests: `pip install -e ".[dev]" && pytest`.
 4. Run the `kazenai` test suite against the new version
    (`pip install -e ../kazen-event-schema` in a `kazenai-core` checkout, then
    `pytest`). A failure there means the change is breaking.
 5. Commit, push, and wait for CI.
-6. Tag and publish:
+6. Tag, publish and create the GitHub Release:
 
    ```bash
    git tag -a vX.Y.Z -m "kazen-event-schema X.Y.Z"
    git push origin vX.Y.Z
+   # The Release body is this version's CHANGELOG.md section plus a docs and support line.
+   awk '/^## /{p=0} /^## X.Y.Z /{p=1; next} p' CHANGELOG.md > /tmp/notes-X.Y.Z.md
+   printf '\nDocs: https://docs.kazenai.com/ · Support: open an issue at https://github.com/kazenai-ai/kazen-event-schema/issues\n' >> /tmp/notes-X.Y.Z.md
+   gh release create vX.Y.Z --title "kazen-event-schema X.Y.Z" --notes-file /tmp/notes-X.Y.Z.md --verify-tag
    ```
 
 7. Raise the lower bound in `kazenai` only when it needs something new from this
