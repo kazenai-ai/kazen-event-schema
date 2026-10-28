@@ -3,4 +3,4 @@
 include LICENSE NOTICE README.md
 prune tests
 prune .github
-exclude RELEASING.md DEPLOY.md CONTRIBUTING.md SECURITY.md
+exclude CHANGELOG.md RELEASING.md DEPLOY.md CONTRIBUTING.md SECURITY.md

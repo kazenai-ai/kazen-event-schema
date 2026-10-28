@@ -5,7 +5,7 @@ from __future__ import annotations
 from kazen_event_schema import KazenEvent
 
 
-def test_p0_canonical_tokens_17_normalizes_tokens_used() -> None:
+def test_canonical_tokens_17_normalizes_tokens_used() -> None:
     event = KazenEvent.model_validate(
         {
             "schema_version": "1.2",
