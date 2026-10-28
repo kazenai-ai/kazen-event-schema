@@ -86,29 +86,6 @@ def test_finops_budget_denied_legacy_extra_fields_allowed() -> None:
     )
 
 
-def test_growthops_critic_verdict_event_is_registered() -> None:
-    assert "growthops.critic.verdict" in KNOWN_EVENT_TYPES
-    validate_kazen_event(
-        {
-            "schema_version": "1.2",
-            "ts_ms": 1,
-            "event_id": "critic-verdict-1",
-            "org_id": "org-a",
-            "workspace_id": "default",
-            "project_id": "default",
-            "surface": "kazenai-agent-growthops",
-            "agent_id": "metrics_briefing",
-            "agent_role": "growthops",
-            "run_id": "run-1",
-            "step_id": "critic",
-            "event_type": "growthops.critic.verdict",
-            "cost_quality_score": 0.82,
-            "payload": {"agent_type": "metrics_briefing", "critic": {"score": 4}},
-        },
-        strict=True,
-    )
-
-
 def test_finops_budget_payload_model_class() -> None:
     p = FinOpsBudgetPayload(
         allowed=False,
@@ -213,21 +190,10 @@ def test_tool_call_payload_valid() -> None:
     validate_payload("tool.call", {"tool_name": "edit_file", "args_hash": "deadbeef"})
 
 
-def test_mcp_call_uses_tool_call_validator() -> None:
-    validate_payload("mcp.call", {"tool_name": "search_memory"})
-
-
 def test_gate_decision_payload_valid() -> None:
     validate_payload(
         "gate.decision",
         {"gate_type": "gate_1", "decision": "approve", "reason": "budget ok"},
-    )
-
-
-def test_gate_decision_with_brain_trace_node_id() -> None:
-    validate_payload(
-        "gate.decision",
-        {"gate_type": "gate_0", "brain_trace_node_id": "node-abc"},
     )
 
 
@@ -353,5 +319,5 @@ def test_finops_payload_model_class() -> None:
 
 
 def test_usage_payload_model_class() -> None:
-    p = UsagePayload(module="brain", meter="brain_node", quantity=4)
+    p = UsagePayload(module="finops", meter="reservation", quantity=4)
     assert p.quantity == 4

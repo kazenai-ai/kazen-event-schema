@@ -1,9 +1,9 @@
-"""kazen_event_schema — canonical KazenEvent schema shared across all KazenAI services.
+"""kazen_event_schema — the canonical KazenEvent shared by the KazenAI SDKs and Agent FinOps.
 
 Usage:
     from kazen_event_schema import KazenEvent, EventType, validate_kazen_event, is_known_event_type
 
-No orchestrator-specific imports. Safe to install in any service.
+No service-specific imports. Safe to install in any service.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ try:
 
     __version__ = _pkg_version("kazen-event-schema")
 except PackageNotFoundError:  # pragma: no cover - source-tree only
-    __version__ = "0.6.5"
+    __version__ = "0.6.6"
 __all__ = [
     "KazenEvent",
     "EventType",
@@ -41,38 +41,11 @@ __all__ = [
     "GateDecisionPayload",
     "RunLifecyclePayload",
     "FinOpsPayload",
-    "FinOpsOptimizationPayload",
     "FinOpsBudgetPayload",
     "FinOpsBudgetForecastPayload",
     "FinOpsBudgetLevel",
     "validate_payload",
-    "MemoryWritePayload",
-    "validate_memory_write_payload",
-    # Orchestration (Kazen Route / Conductor-compatible)
-    "OrchestrationWorkflow",
-    "OrchestrationRole",
-    "OrchestrationWorkflowPlannedPayload",
-    "OrchestrationStepPayload",
-    "OrchestrationWorkflowRevisedPayload",
-    "OrchestrationRewardRecordedPayload",
-    "ORCHESTRATION_EVENT_TYPES",
-    "workflow_to_planned_payload",
-    "validate_orchestration_payload",
-    "orchestration_workflow_round_trip",
-    "TriRole",
-    # Company operating loop
-    "CompanyLoopRecord",
-    "CompanyBlockerKind",
-    "CompanyGoalCreatedPayload",
-    "CompanyRunStartedPayload",
-    "CompanyApprovalPendingPayload",
-    "CompanyOutcomeRecordedPayload",
-    "CompanyMemoryCommittedPayload",
-    "COMPANY_LOOP_EVENT_TYPES",
-    "record_to_goal_created_payload",
-    "validate_company_loop_payload",
-    "company_loop_record_round_trip",
-    # Governance / policy plane
+    # Organization spend policy
     "OrgPolicy",
     "PolicyAction",
     "PolicyActionKind",
@@ -83,44 +56,11 @@ __all__ = [
     "build_policy_decision_event",
     "validate_governance_payload",
     "GOVERNANCE_EVENT_TYPES",
-    # Lens shared eval substrate
+    # Run receipts
     "LensEvalPayload",
     "LensRootCausePayload",
-    "GrowthOpsMultichannelPayload",
-    "GrowthOpsInboundIntentPayload",
-    "GrowthOpsReplyLearnedPayload",
-    "MemoryForgottenPayload",
-    "MemoryRecallBenchmarkPayload",
-    # MCP mesh catalog
-    "McpToolSpec",
-    "KAZEN_MCP_CATALOG",
-    "REQUIRED_CAPABILITIES",
-    "catalog_tool_names",
-    "required_capabilities_covered",
-    "all_required_capabilities_covered",
-    "lookup_tool",
-    "is_budget_governed",
-    "McpMeshSession",
-    "InterAgentMesh",
-    "BudgetDenied",
-    "OrgMismatch",
-    "build_mcp_call_event",
-    "build_inter_agent_call_event",
 ]
 
-from .company_loop import (  # noqa: E402
-    COMPANY_LOOP_EVENT_TYPES,
-    CompanyApprovalPendingPayload,
-    CompanyBlockerKind,
-    CompanyGoalCreatedPayload,
-    CompanyLoopRecord,
-    CompanyMemoryCommittedPayload,
-    CompanyOutcomeRecordedPayload,
-    CompanyRunStartedPayload,
-    company_loop_record_round_trip,
-    record_to_goal_created_payload,
-    validate_company_loop_payload,
-)
 from .governance import (  # noqa: E402
     GOVERNANCE_EVENT_TYPES,
     FinOpsReserveContext,
@@ -133,38 +73,6 @@ from .governance import (  # noqa: E402
     evaluate_policy,
     validate_governance_payload,
 )
-from .memory_write import MemoryWritePayload, validate_memory_write_payload  # noqa: E402
-from .mcp_catalog import (  # noqa: E402
-    KAZEN_MCP_CATALOG,
-    McpToolSpec,
-    REQUIRED_CAPABILITIES,
-    all_required_capabilities_covered,
-    catalog_tool_names,
-    is_budget_governed,
-    lookup_tool,
-    required_capabilities_covered,
-)
-from .mcp_mesh import (  # noqa: E402
-    BudgetDenied,
-    InterAgentMesh,
-    McpMeshSession,
-    OrgMismatch,
-    build_inter_agent_call_event,
-    build_mcp_call_event,
-)
-from .orchestration import (  # noqa: E402
-    ORCHESTRATION_EVENT_TYPES,
-    OrchestrationRole,
-    OrchestrationStepPayload,
-    OrchestrationWorkflow,
-    OrchestrationWorkflowPlannedPayload,
-    OrchestrationWorkflowRevisedPayload,
-    OrchestrationRewardRecordedPayload,
-    TriRole,
-    orchestration_workflow_round_trip,
-    validate_orchestration_payload,
-    workflow_to_planned_payload,
-)
 
 from .normalize import is_model_call, normalize_event_type  # noqa: E402
 
@@ -175,14 +83,8 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "backlog.item_completed",
     "campaign.published",
     "checkpoint.saved",
-    "code.approved",
-    "context_pack.composed",
-    "delivery.pr.created",
     "diagnostics.snapshot",
-    "edits.applied",
     "event.unknown",
-    "ci.failed",
-    "ci.repaired",
     "drift.detected",
     "finops.budget.denied",
     "finops.budget.reserve",
@@ -193,104 +95,38 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "finops.trajectory",
     "finops.pause",
     "finops.resumed",
-    "finops.optimization.applied",
     "anomaly.detected",
-    "fsm.transition",
-    "evidence.bundle.written",
-    "gate.fast_path_bypass",
     "gate.decision",
-    "gate.override.approved",
-    "gate.override.requested",
-    "finance.review_completed",
-    "operating.review_completed",
-    "orchestration.step.completed",
-    "orchestration.step.started",
-    "orchestration.workflow.planned",
-    "orchestration.workflow.revised",
-    "orchestration.reward.recorded",
-    # Company operating loop
-    "company.goal.created",
-    "company.run.started",
+    # Approvals and memory
     "company.approval.pending",
-    "company.outcome.recorded",
     "company.memory.committed",
     # Governance / policy plane
     "policy.decision",
-    # Lens shared eval substrate — one eval score for any agent's
-    # output, joined to run lineage by root_run_id.
+    # Evaluation results, joined to run lineage by root_run_id.
     "lens.eval.scored",
     "lens.root_cause.diagnosed",
-    "playbook.suggested",
-    "playbook.outcome_observed",
-    "playbook.version_changed",
-    "gatekeeper.complete",
-    "gatekeeper.fallback_used",
-    "growthops.approval.queued",
-    "growthops.multichannel.planned",
-    "growthops.inbound.scored",
-    "growthops.reply.learned",
-    "growthops.critic.verdict",
-    "growthops.budget.exceeded",
-    "growthops.ingest.completed",
-    "growthops.run.completed",
-    "growthops.run.failed",
-    "growthops.run.started",
-    "improvement.eval.baseline",
-    "improvement.rollout",
     "run.task.completed",
     "run.task.started",
-    # Company goal / OKR events (Month 10 — Self-Directing Intelligence)
-    "goals.created",
-    "goals.task.dispatched",
-    "workforce.task.dispatched",
-    "goals.task.completed",
-    "goals.task.failed",
-    "goals.completed",
+    # Runs, context and replay
     "human_gate",
-    "kpi.snapshot",
-    "learning.background_review_complete",
-    "learning.snapshot",
-    "brain.guard",
     "brain.retrieve",
     "context.compressed",
     "context.tool_result_compacted",
     "run.evidence_incomplete",
     "run.failed",
     "run.step.checkpointed",
-    "session.indexed",
     "llm.call",  # deprecated alias; prefer model.call (normalized at ingest)
-    "mcp.call",
     "memory.write",
-    "memory.forgotten",
-    "memory.recall_benchmark",
     "meltdown.onset",
     "model.call",
     "permission_denied",
-    "patch.applied",
-    "plan.written",
-    "pr.created",
     "replay.completed",
     "replay.started",
-    "router.circuit_breaker_open",
     "routing.model_selected",
-    "routing.profile_selected",
     "run.cancelled",
     "run.finished",
     "run.started",
-    "sandbox.command",
-    "sales.account_researched",
-    "sales.approval_granted",
-    "sales.approval_rejected",
-    "sales.approval_requested",
-    "sales.contact_selected",
-    "sales.message_drafted",
     "sales.opportunity_stage_changed",
-    "sales.opportunity_stalled",
-    "sales.outbound_sent",
-    "sales.outbound_staged",
-    "sales.reply_received",
-    "test.completed",
-    "test.selected",
     "tool.call",
     "tool.pre_call",
     "tool.repair.applied",
@@ -301,19 +137,9 @@ KNOWN_EVENT_TYPES: frozenset[str] = frozenset({
     "workflow.suspend",
     "workflow.error",
     "support.case_resolved",
-    "support.escalated",
     "user.gate_approved",
     "user.gate_rejected",
-    "user.hunk_accepted",
-    "user.hunk_rejected",
-    "user.run_resumed",
-    "user.run_started",
-    "user.scope_expansion_requested",
-    "verify.completed",
-    "verification.evidence",
     "usage.recorded",
-    "worktree.created",
-    "worktree.isolation_unavailable",
 })
 
 # Convenient alias for IDE completions
@@ -368,7 +194,6 @@ class GateDecisionPayload(BaseModel):
     gate_type: Optional[str] = None           # gate_0 | gate_1 | gate_2
     decision: Optional[str] = None            # approve | deny | escalate
     reason: Optional[str] = None
-    brain_trace_node_id: Optional[str] = None
 
 
 class RunLifecyclePayload(BaseModel):
@@ -383,30 +208,6 @@ class FinOpsPayload(BaseModel):
     threshold_usd: Optional[float] = None
     current_usd: Optional[float] = None
     reason: Optional[str] = None
-
-
-class FinOpsOptimizationPayload(BaseModel):
-    """Typed payload for ``finops.optimization.applied``.
-
-    Records measured savings from auto-routing, semantic cache, and prompt
-    compression while preserving Lens eval score.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    agent: str = ""
-    baseline_model: str = ""
-    selected_model: str = ""
-    baseline_cost_usd: float = 0.0
-    optimized_cost_usd: float = 0.0
-    savings_usd: float = 0.0
-    savings_pct: float = 0.0
-    baseline_score: float = 0.0
-    optimized_score: float = 0.0
-    score_preserved: bool = False
-    strategies_applied: List[str] = Field(default_factory=list)
-    cache_hit: bool = False
-    compression_ratio: Optional[float] = None
 
 
 FinOpsBudgetLevel = Literal[
@@ -522,109 +323,17 @@ class UsagePayload(BaseModel):
 class LensEvalPayload(BaseModel):
     """Typed payload for the canonical `lens.eval.scored` audit event.
 
-    The single record shape Lens emits when it grades ANY agent's output (Brain
-    recall, Builder PR, GrowthOps reply, FinOps forecast). Carries the normalized
-    overall score plus the per-metric breakdown so "we grade our agents with the
-    rigor we grade yours" is one auditable event joined to lineage by root_run_id.
+    The record run receipts emit when they grade an agent's output. Carries the
+    normalized overall score plus the per-metric breakdown, joined to lineage by
+    root_run_id.
     """
 
     model_config = ConfigDict(extra="allow")
 
-    agent: str = ""                 # brain | builder | growthops | finops
+    agent: str = ""                 # the agent that was graded
     overall_score: float = 0.0      # normalized 0..1, higher is better
     passed: Optional[bool] = None
     metrics: Dict[str, Any] = Field(default_factory=dict)  # metric -> {score, passed, ...}
-
-
-class GrowthOpsMultichannelPayload(BaseModel):
-    """Typed payload for ``growthops.multichannel.planned``.
-
-    Records a governed email + LinkedIn + voice orchestration plan joined to
-    call qualification and a shared sequence_id on root_run_id lineage.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    sequence_id: str = ""
-    source_channel: str = ""
-    high_intent: bool = False
-    channels_planned: List[str] = Field(default_factory=list)
-    touch_count: int = 0
-    qualification_summary: Dict[str, Any] = Field(default_factory=dict)
-    steps: List[Dict[str, Any]] = Field(default_factory=list)
-    prospect_email: str = ""
-    linkedin_url: str = ""
-
-
-class GrowthOpsInboundIntentPayload(BaseModel):
-    """Typed payload for ``growthops.inbound.scored``.
-
-    Signal/intent-based inbound scoring — prioritizes warm inbound over cold
-    outbound and routes to the right GrowthOps playbook.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    signal_type: str = ""
-    intent_score: float = 0.0
-    intent_tier: str = ""  # hot | warm | cold | noise
-    recommended_playbook: str = ""
-    suppress_cold_outbound: bool = False
-    signals_detected: List[str] = Field(default_factory=list)
-    reply_classification: str = ""
-    prospect_email: str = ""
-    source_channel: str = ""
-
-
-class GrowthOpsReplyLearnedPayload(BaseModel):
-    """Typed payload for ``growthops.reply.learned``.
-
-    Reply-outcome learning that feeds the next sequence touch, with the Lens
-    proof of lift over the baseline follow-up.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    sample_count: int = 0
-    conversion_rate: float = 0.0
-    winning_themes: List[str] = Field(default_factory=list)
-    baseline_lens_score: float = 0.0
-    learned_lens_score: float = 0.0
-    lift: float = 0.0
-    lens_eval_passed: bool = False
-    touch_number: int = 0
-    sequence_id: str = ""
-    eval_kind: str = "reply_outcome_learning"
-
-
-class MemoryForgottenPayload(BaseModel):
-    """Typed payload for ``memory.forgotten``.
-
-    Machine-unlearning / GDPR erasure — provenance for a deliberately forgotten fact.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    node_id: str = ""
-    content_fingerprint: str = ""
-    reason: str = ""
-    requested_by: str = ""
-    deleted: Dict[str, int] = Field(default_factory=dict)
-    found: bool = True
-
-
-class MemoryRecallBenchmarkPayload(BaseModel):
-    """Typed payload for ``memory.recall_benchmark``.
-
-    Sleep-time consolidation recall lift measurement for the drift monitor.
-    """
-
-    model_config = ConfigDict(extra="allow")
-
-    recall_before: float = 0.0
-    recall_after: float = 0.0
-    recall_lift: float = 0.0
-    probe_count: int = 0
 
 
 class LensRootCausePayload(BaseModel):
@@ -673,9 +382,7 @@ _PAYLOAD_VALIDATORS: Dict[str, type[BaseModel]] = {
     "model.call": ModelCallPayload,
     "llm.call": ModelCallPayload,
     "tool.call": ToolCallPayload,
-    "mcp.call": ToolCallPayload,
     "gate.decision": GateDecisionPayload,
-    "gate.override.requested": GateDecisionPayload,
     "run.started": RunLifecyclePayload,
     "run.finished": RunLifecyclePayload,
     "run.failed": RunLifecyclePayload,
@@ -688,29 +395,13 @@ _PAYLOAD_VALIDATORS: Dict[str, type[BaseModel]] = {
     "anomaly.detected": FinOpsPayload,
     "finops.trajectory": FinOpsPayload,
     "finops.loop.anomaly": FinOpsPayload,
-    "finops.optimization.applied": FinOpsOptimizationPayload,
     "usage.recorded": UsagePayload,
     "tool.repair.applied": ToolRepairPayload,
     "context.tool_result_compacted": ContextCompactionPayload,
     "context.compressed": ContextCompactionPayload,
-    "orchestration.workflow.planned": OrchestrationWorkflowPlannedPayload,
-    "orchestration.step.started": OrchestrationStepPayload,
-    "orchestration.step.completed": OrchestrationStepPayload,
-    "orchestration.workflow.revised": OrchestrationWorkflowRevisedPayload,
-    "orchestration.reward.recorded": OrchestrationRewardRecordedPayload,
-    "company.goal.created": CompanyGoalCreatedPayload,
-    "company.run.started": CompanyRunStartedPayload,
-    "company.approval.pending": CompanyApprovalPendingPayload,
-    "company.outcome.recorded": CompanyOutcomeRecordedPayload,
-    "company.memory.committed": CompanyMemoryCommittedPayload,
     "policy.decision": PolicyDecisionPayload,
     "lens.eval.scored": LensEvalPayload,
     "lens.root_cause.diagnosed": LensRootCausePayload,
-    "growthops.multichannel.planned": GrowthOpsMultichannelPayload,
-    "growthops.inbound.scored": GrowthOpsInboundIntentPayload,
-    "growthops.reply.learned": GrowthOpsReplyLearnedPayload,
-    "memory.forgotten": MemoryForgottenPayload,
-    "memory.recall_benchmark": MemoryRecallBenchmarkPayload,
     "workflow.start": FrameworkWorkflowPayload,
     "workflow.end": FrameworkWorkflowPayload,
     "workflow.step": FrameworkWorkflowPayload,
@@ -743,17 +434,17 @@ class KazenEvent(BaseModel):
     org_id: str = "local"
     workspace_id: str = "default"
     project_id: str = "general"
-    surface: str = "kazenai-agent-builder"
-    client_id: Optional[str] = None  # cursor | claude_code | vscode | mcp
-    agent_id: str = "devagent"
+    surface: str = "unspecified"
+    client_id: Optional[str] = None  # the client that sent the event, when known
+    agent_id: str = "default"
     agent_role: Optional[str] = None
     run_id: Optional[str] = None
     step_id: Optional[str] = None
     parent_step_id: Optional[str] = None
     parent_run_id: Optional[str] = None
-    # Unified cross-product lineage. root_run_id is the top of the
-    # run tree that links a Builder run + its FinOps cost + Lens trace + Brain
-    # writes by a single id; trace_id is the OTel-compatible distributed trace id.
+    # Lineage. root_run_id is the top of the run tree and links an agent run to
+    # its Agent FinOps cost and its run receipt by a single id; trace_id is the
+    # OTel-compatible distributed trace id.
     root_run_id: Optional[str] = None
     trace_id: Optional[str] = None
     event_type: str

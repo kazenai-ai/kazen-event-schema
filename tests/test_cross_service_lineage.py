@@ -1,11 +1,10 @@
-"""Cross-service lineage proof (>=2 components, one shared root_run_id).
+"""Cross-service lineage check (>=2 components, one shared root_run_id).
 
 A single event dict carrying a shared root_run_id must validate through BOTH the
 canonical kazen_event_schema and Lens's ingest schema, with the lineage fields
-preserved by each. This is the cross-product proof the loop requires (not a
-single-service mock). The canonical model is the source of truth; Lens's parallel
+preserved by each. The canonical model is the source of truth; Lens's parallel
 ingest model is aligned to it (it loads schema.py directly so the test does not
-require Lens's full backend deps).
+require Lens's full backend deps). Skipped when the Lens backend isn't checked out.
 """
 
 from __future__ import annotations
@@ -18,7 +17,7 @@ import pytest
 
 from kazen_event_schema import validate_kazen_event
 
-# Locate Lens's ingest schema relative to the workspace root (../kazenai-agent-lens).
+# Lens's ingest schema, when the Lens backend is checked out next to this repository.
 _LENS_SCHEMA = (
     Path(__file__).resolve().parents[2]
     / "kazenai-agent-lens"
@@ -45,8 +44,8 @@ def _load_lens_kazen_event():
     return module.KazenEvent
 
 
-# One event, emitted as if a Builder run that shares a root with its FinOps cost,
-# Lens trace, and Brain writes.
+# One event from an agent run that shares a root with its Agent FinOps cost and
+# its run receipt.
 SHARED_EVENT = {
     "schema_version": "1.2",
     "ts_ms": 1_700_000_000_000,
@@ -54,15 +53,15 @@ SHARED_EVENT = {
     "org_id": "org-a",
     "workspace_id": "ws-1",
     "project_id": "proj-1",
-    "surface": "kazenai-agent-builder",
-    "agent_id": "devagent",
-    "agent_role": "builder",
-    "run_id": "run-builder-9",
-    "parent_run_id": "run-orchestrator-1",
+    "surface": "kazenai-core",
+    "agent_id": "support-agent",
+    "agent_role": "agent",
+    "run_id": "run-9",
+    "parent_run_id": "run-parent-1",
     "root_run_id": "root-run-100",
     "trace_id": "trace-abc-100",
     "cost_usd": 0.37,
-    "event_type": "delivery.pr.created",
+    "event_type": "model.call",
 }
 
 

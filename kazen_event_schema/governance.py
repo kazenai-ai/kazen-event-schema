@@ -1,16 +1,10 @@
-"""The unified org governance/policy plane (single source of truth).
+"""Organization spend policy and its audit event.
 
-One `OrgPolicy` object expresses the clauses a CISO/CFO cares about:
-
-  * no agent spends more than $X                 -> max_spend_usd
-  * no email/PR/external-send without approval   -> require_approval_for_external_send
-  * no code merged without security review        -> require_security_review_for_merge
-  * no memory write without a citation            -> require_citation_for_memory_write
-
-Every service imports the SAME `evaluate_policy()` and emits the SAME canonical
-`policy.decision` KazenEvent, so "flipping one org policy changes behaviour in all
-five agents" and one audit log captures every decision — something no point-tool
-stack can offer. No parallel policy/audit model lives in any service; this is it.
+`OrgPolicy.max_spend_usd` is a coarse per-action spend ceiling for an organization.
+Hierarchical budgets (feature, actor, team, workspace) are decided by the Agent FinOps
+reserve and passed in as `FinOpsReserveContext`. `evaluate_policy()` returns the
+decision, and `build_policy_decision_event()` records it as one canonical
+`policy.decision` KazenEvent.
 """
 
 from __future__ import annotations
@@ -20,14 +14,13 @@ from typing import Any, Dict, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-# The four governed action classes, one per enforcement surface family.
-PolicyActionKind = Literal["spend", "external_send", "code_merge", "memory_write"]
+PolicyActionKind = Literal["spend"]
 
 GOVERNANCE_EVENT_TYPES = frozenset({"policy.decision"})
 
 
 class OrgPolicy(BaseModel):
-    """A single org-scoped policy enforced identically across all five agents."""
+    """An organization's spend policy."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -35,35 +28,28 @@ class OrgPolicy(BaseModel):
     policy_version: int = 1
     # None means "no cap"; a number caps per-action spend in USD.
     max_spend_usd: Optional[float] = None
-    require_approval_for_external_send: bool = False
-    require_security_review_for_merge: bool = False
-    require_citation_for_memory_write: bool = False
     updated_at_ms: int = Field(default_factory=lambda: int(time.time() * 1000))
 
 
 class PolicyAction(BaseModel):
-    """A normalised action a service wants to take, checked against OrgPolicy."""
+    """A spend action a service wants to take, checked against OrgPolicy."""
 
     model_config = ConfigDict(extra="allow")
 
     kind: PolicyActionKind
     org_id: str = "local"
-    surface: Optional[str] = None  # emitting agent, e.g. kazenai-agent-brain
+    surface: Optional[str] = None  # the service or SDK that emitted the action
     run_id: Optional[str] = None
     root_run_id: Optional[str] = None
-    # Per-kind context (only the field relevant to `kind` is consulted):
-    cost_usd: Optional[float] = None      # spend
-    workspace_id: Optional[str] = None    # spend → FinOps workspace scope
-    feature: Optional[str] = None         # spend → FinOps feature slug
-    actor_id: Optional[str] = None        # spend → FinOps actor (from Principal)
-    finops: Optional["FinOpsReserveContext"] = None  # spend → hierarchical budget outcome
-    approved: bool = False                 # external_send
-    security_reviewed: bool = False        # code_merge
-    has_citation: bool = False             # memory_write
+    cost_usd: Optional[float] = None
+    workspace_id: Optional[str] = None    # Agent FinOps workspace scope
+    feature: Optional[str] = None         # Agent FinOps feature slug
+    actor_id: Optional[str] = None        # Agent FinOps actor (from the principal)
+    finops: Optional["FinOpsReserveContext"] = None  # hierarchical budget outcome
 
 
 class FinOpsReserveContext(BaseModel):
-    """Outcome of a FinOps `/v1/budget/check` — hierarchical budgets defer here, not OrgPolicy."""
+    """Outcome of an Agent FinOps reserve; hierarchical budgets are decided there, not by OrgPolicy."""
 
     model_config = ConfigDict(extra="allow")
 
@@ -98,7 +84,7 @@ class PolicyDecisionPayload(BaseModel):
 
 
 def evaluate_policy(policy: OrgPolicy, action: PolicyAction) -> PolicyDecision:
-    """Pure decision: does `policy` permit `action`? One evaluator for all services."""
+    """Pure decision: does `policy` permit `action`?"""
 
     def deny(clause: str, reason: str) -> PolicyDecision:
         return PolicyDecision(
@@ -131,24 +117,6 @@ def evaluate_policy(policy: OrgPolicy, action: PolicyAction) -> PolicyDecision:
             base = action.finops.reason or "FinOps budget reserve denied"
             reason = f"{base} ({detail})" if detail else base
             return deny("finops_reserve", reason)
-    elif action.kind == "external_send":
-        if policy.require_approval_for_external_send and not action.approved:
-            return deny(
-                "require_approval_for_external_send",
-                "external send requires an approved gate",
-            )
-    elif action.kind == "code_merge":
-        if policy.require_security_review_for_merge and not action.security_reviewed:
-            return deny(
-                "require_security_review_for_merge",
-                "code merge requires a passing security review",
-            )
-    elif action.kind == "memory_write":
-        if policy.require_citation_for_memory_write and not action.has_citation:
-            return deny(
-                "require_citation_for_memory_write",
-                "memory write requires a citation/source reference",
-            )
 
     return PolicyDecision(
         allowed=True,
