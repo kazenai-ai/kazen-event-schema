@@ -4,7 +4,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://github.com/kazenai-ai/kazen-event-schema/blob/main/LICENSE)
 
-**The shared event contract for KazenAI.** One schema so Agent FinOps, Agent Lens, and the SDKs speak the same language about cost, runs, and control decisions.
+**The shared event contract for KazenAI.** One schema so Agent FinOps, its run receipts, and the SDKs speak the same language about cost, runs, and control decisions.
 
 **Install:** [PyPI · kazen-event-schema](https://pypi.org/project/kazen-event-schema/) · **Docs:** [Event reference](https://docs.kazenai.com/reference/events/) · **Products:** [kazenai.com](https://kazenai.com)
 
@@ -14,11 +14,11 @@
 
 ## Why it exists
 
-Economic control only works if every surface agrees on what an “event” is:
+Hard spending limits only work if every part of the stack agrees on what an “event” is:
 
 - SDKs emit what happened (model calls, denials, settlements)
 - FinOps accounts for spend and policy decisions
-- Lens investigates failures with the same identifiers
+- Run receipts explain each run and decision with the same identifiers
 
 `kazen-event-schema` is that contract — a small, versioned Pydantic model used across the stack.
 
@@ -94,7 +94,7 @@ event = KazenEvent(
 |-------------------|------|
 | [`kazenai`](https://pypi.org/project/kazenai/) / [`kazenai-finops`](https://pypi.org/project/kazenai-finops/) | SDK emit path |
 | Agent FinOps | Accounting + ingest |
-| Agent Lens | Investigation + timelines |
+| Agent FinOps run receipts | Run timelines + decision evidence |
 
 ## Consuming events safely
 
